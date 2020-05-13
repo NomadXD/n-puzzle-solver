@@ -1,5 +1,5 @@
 class Node:
-    def __init__(self, tiles, level, f_val):
+    def __init__(self, tiles, level, f_val, movement, predecessor):
         """ Initialize the node with the state of the tiles,
             level of the node in the tree, and value of the evaluation
             function f (f = g + h)
@@ -7,6 +7,8 @@ class Node:
         self.tiles = tiles
         self.level = level
         self.f_val = f_val
+        self.movement = movement
+        self.predecessor = predecessor 
 
     def generate_successors(self):
         successors = []
@@ -15,11 +17,28 @@ class Node:
             shifted_indexes = [[i[0]+1,i[1]],[i[0]-1,i[1]],[i[0],i[1]+1],[i[0],i[1]-1]]
             print(shifted_indexes)
             for j in shifted_indexes:
+                #print(j)
+                if not (j[0] >= 0 and j[0] < len(self.tiles) and j[1] >= 0 and j[1] < len(self.tiles)):
+                    continue
+
+                if i[0] < j[0]:
+                    movement = (self.tiles[j[0]][j[1]],"Down")
+                elif i[0] > j[0]:
+                    movement = (self.tiles[j[0]][j[1]],"Up")
+                elif i[1] > j[1]:
+                    movement = (self.tiles[j[0]][j[1]],"Right")
+                elif i[1] < j[1]:
+                    movement = (self.tiles[j[0]][j[1]],"Left")
+                else:
+                    pass 
                 successor = self.validate_index(i[0],i[1],j[0],j[1])
-                if successor is not None:
-                    successor = Node(successor,self.level+1,0)
-                    #print(successor.tiles)
-                    successors.append(successor)
+                successor = Node(successor,self.level+1,0,movement,self)
+                #print(successor.tiles)
+                successors.append(successor)
+                # if successor is not None:
+                #     successor = Node(successor,self.level+1,0,movement,self)
+                #     print(successor.tiles)
+                #     successors.append(successor)
         #print(successors)
         return successors 
 
@@ -34,20 +53,20 @@ class Node:
         return indexes
 
 
-    def validate_index(self,x_old,y_old,x_shifted,y_shifted):
+    def validate_index(self,y_old,x_old,y_shifted,x_shifted):
         #print(x_old,y_old,type(x_shifted),type(y_shifted))
-        if x_shifted >= 0 and x_shifted < len(self.tiles) and y_shifted >= 0 and y_shifted < len(self.tiles):
-            successor_tiles = []
-            successor_tiles = self.copy(self.tiles)
-            temp_val = successor_tiles[x_shifted][y_shifted]
-            #print(temp_val)
-            #print(successor_tiles[])
-            successor_tiles[x_shifted][y_shifted] = successor_tiles[x_old][y_old]
-            successor_tiles[x_old][y_old] = temp_val
-            #print(successor_tiles)
-            return successor_tiles
-        else:
-            return None
+        #if y_shifted >= 0 and y_shifted < len(self.tiles) and x_shifted >= 0 and x_shifted < len(self.tiles):
+        successor_tiles = []
+        successor_tiles = self.copy(self.tiles)
+        temp_val = successor_tiles[y_shifted][x_shifted]
+        #print(temp_val)
+        #print(successor_tiles[])
+        successor_tiles[y_shifted][x_shifted] = successor_tiles[y_old][x_old]
+        successor_tiles[y_old][x_old] = temp_val
+        #print(successor_tiles)
+        return successor_tiles
+        #else:
+            #return None
 
     
     def copy(self,root):
@@ -83,7 +102,7 @@ class Puzzle:
         return misplacements
 
     def solve_puzzle(self):
-        start = Node(self.start,0,0)
+        start = Node(self.start,0,0,None,None)
         goal = self.goal
         start.f_val = self.f(start,goal)
 
@@ -94,7 +113,11 @@ class Puzzle:
             print("New It",current.tiles)
             print("H",self.h(current.tiles,goal))
             if self.h(current.tiles,goal) == 0:
-                print('Done')
+                path = []
+                while current.predecessor != None:
+                    path.append(current.movement)
+                    current = current.predecessor
+                print(path[::-1])
                 break
 
             for successor in current.generate_successors():
@@ -121,7 +144,7 @@ class Puzzle:
                         print("")
                     #print("Tiles",successor.tiles)
                     print("f_val",successor.f_val)
-                    print("level",successor.level)
+                    print("level",successor.predecessor)
                     self.open.append(successor)
                     print(len(self.open))
             self.closed.append(current)
