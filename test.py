@@ -1,3 +1,7 @@
+import random
+import copy
+import timeit
+
 class Node:
     def __init__(self, tiles, level, f_val, movement, predecessor):
         """ Initialize the node with the state of the tiles,
@@ -16,7 +20,6 @@ class Node:
         for i in empty_indexes:
             shifted_indexes = [[i[0]+1,i[1]],[i[0]-1,i[1]],[i[0],i[1]+1],[i[0],i[1]-1]]
             for j in shifted_indexes:
-                
                 if not (j[0] >= 0 and j[0] < len(self.tiles) and j[1] >= 0 and j[1] < len(self.tiles)):
                     continue
 
@@ -52,7 +55,6 @@ class Node:
         successor_tiles[y_shifted][x_shifted] = successor_tiles[y_old][x_old]
         successor_tiles[y_old][x_old] = temp_val
         return successor_tiles
-    
 
     
     def copy(self,root):
@@ -74,7 +76,7 @@ class Puzzle:
         self.goal = goal
 
     def f(self,start,goal):
-        return self.h_manhattan(start.tiles,goal) + start.level
+        return self.h(start.tiles,goal) + start.level
 
     def h_manhattan(self,start,goal):
         tmd = 0
@@ -107,24 +109,27 @@ class Puzzle:
         return misplacements
 
     def solve_puzzle(self):
-        print("Solving........")
+        start_time = timeit.default_timer()
         start = Node(self.start,0,0,None,None)
         goal = self.goal
         start.f_val = self.f(start,goal)
 
         self.open.append(start)
-        count  = 0
+        count = 0
         while len(self.open) > 0:
+            print(count)
             current = self.open[0]
+            #print("Selected",current.tiles,current.f_val)
             if self.h(current.tiles,goal) == 0:
                 path = []
                 while current.predecessor != None:
                     path.append(current.movement)
                     current = current.predecessor
                 print(path[::-1])
-                print("Number of iterations:{0}".format(count))
-                f = open("output.txt", "w")
-                f.write(str(path[::-1]))
+                stop = timeit.default_timer()
+                report = [current.tiles,count,path,stop - start_time]
+                f = open("report_1.txt", "a")
+                f.write(str(report)+"\n")
                 f.close()
                 break
 
@@ -139,6 +144,7 @@ class Puzzle:
 
                 if successor not in self.open:
                     successor.f_val = self.f(successor,goal)
+                    print(successor.tiles, successor.f_val)
                     self.open.append(successor)
 
             self.closed.append(current)
@@ -147,10 +153,7 @@ class Puzzle:
             count += 1
             
             
-            
-            
-        
-            
+                    
 def read_file(file_name):
     tiles = []
     with open(file_name) as f:
@@ -163,55 +166,45 @@ def read_file(file_name):
 
     return tiles
 
+start = read_file('start.txt')
+goal = read_file('goal.txt')
+
+modified_goal = copy.deepcopy(goal)
+for _ in range(2):
+    k = random.randint(0,len(modified_goal)-1)
+    l = random.randint(0,len(modified_goal)-1)
+    i = random.randint(0,len(modified_goal)-1)
+    j = random.randint(0,len(modified_goal)-1)
+    temp_1 = modified_goal[i][j]
+    modified_goal[i][j] = modified_goal[l][j]
+    modified_goal[l][j] = temp_1
+   
+
+puzzle = Puzzle(len(modified_goal),modified_goal,goal)
+puzzle.solve_puzzle()
+print(modified_goal)
+print(goal)
 
 
 
 
 
-if __name__ == "__main__":
-    print("""\
-    
-███╗   ██╗              ██████╗ ██╗   ██╗███████╗███████╗██╗     ███████╗              ███████╗ ██████╗ ██╗    ██╗   ██╗███████╗██████╗ 
-████╗  ██║              ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝██║     ██╔════╝              ██╔════╝██╔═══██╗██║    ██║   ██║██╔════╝██╔══██╗
-██╔██╗ ██║    █████╗    ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     █████╗      █████╗    ███████╗██║   ██║██║    ██║   ██║█████╗  ██████╔╝
-██║╚██╗██║    ╚════╝    ██╔═══╝ ██║   ██║ ███╔╝   ███╔╝  ██║     ██╔══╝      ╚════╝    ╚════██║██║   ██║██║    ╚██╗ ██╔╝██╔══╝  ██╔══██╗
-██║ ╚████║              ██║     ╚██████╔╝███████╗███████╗███████╗███████╗              ███████║╚██████╔╝███████╗╚████╔╝ ███████╗██║  ██║
-╚═╝  ╚═══╝              ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝╚══════╝              ╚══════╝ ╚═════╝ ╚══════╝ ╚═══╝  ╚══════╝╚═╝  ╚═╝
-                                                                                                                                                                                                                                                                          
-    """)
-    
-    
-    choice = 0
-    while choice != 2:
-        print("------------------------------------------------------------------------------------------------------------------------------")
-        print("Main menu:")
-        print("1 - Solve a puzzle")
-        print("2 - Exit")
-        choice = int(input("Please enter your choice:"))
-        if (choice == 1):
-            print("""\
-                Example start/goal configuration. 
-
-                1	4	-	7
-                9	2	3	5
-                6	-	10	13
-                8	11	14	12
-
-                The puzzle should be created in tab delimitted format.
-                Empty location is represented with -
-                Provide a file name of the start/goal configuration below
-            """)
-            start_file = input("Start configuration filename:")
-            goal_file = input("Goal configuration filename:")
-            start = read_file(start_file)
-            goal = read_file(goal_file)
-            puzzle = Puzzle(len(start),start,goal)
-            puzzle.solve_puzzle()
 
 
 
-        
-        
-            
 
+# initial_state = [1,5,3,4,2,6,7,8,0]
+# goal_state = [0,1,2,3,4,5,6,7,8]
+# def calculateManhattan(initial_state):
+#     initial_config = initial_state
+#     manDict = 0
+#     for i,item in enumerate(initial_config):
+#         print(i,item)
+#         prev_row,prev_col = int(i/ 3) , i % 3
+#         goal_row,goal_col = int(item /3),item % 3
+#         manDict += abs(prev_row-goal_row) + abs(prev_col - goal_col)
+#     print(manDict)
+#     return manDict
+
+# calculateManhattan(initial_state)
 
