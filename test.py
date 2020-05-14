@@ -169,6 +169,12 @@ def read_file(file_name):
 start = read_file('start.txt')
 goal = read_file('goal.txt')
 
+"""
+Use deepcopy to copy the goal and then randomnly 
+modify and use it as the start. This avoids 
+checking for unsolvable states
+
+"""
 modified_goal = copy.deepcopy(goal)
 for _ in range(2):
     k = random.randint(0,len(modified_goal)-1)
@@ -185,26 +191,4 @@ puzzle.solve_puzzle()
 print(modified_goal)
 print(goal)
 
-
-
-
-
-
-
-
-
-# initial_state = [1,5,3,4,2,6,7,8,0]
-# goal_state = [0,1,2,3,4,5,6,7,8]
-# def calculateManhattan(initial_state):
-#     initial_config = initial_state
-#     manDict = 0
-#     for i,item in enumerate(initial_config):
-#         print(i,item)
-#         prev_row,prev_col = int(i/ 3) , i % 3
-#         goal_row,goal_col = int(item /3),item % 3
-#         manDict += abs(prev_row-goal_row) + abs(prev_col - goal_col)
-#     print(manDict)
-#     return manDict
-
-# calculateManhattan(initial_state)
 
