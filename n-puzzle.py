@@ -15,7 +15,6 @@ class Node:
         empty_indexes = self.get_empty_tile_indexes()
         for i in empty_indexes:
             shifted_indexes = [[i[0]+1,i[1]],[i[0]-1,i[1]],[i[0],i[1]+1],[i[0],i[1]-1]]
-            print(shifted_indexes)
             for j in shifted_indexes:
                 #print(j)
                 if not (j[0] >= 0 and j[0] < len(self.tiles) and j[1] >= 0 and j[1] < len(self.tiles)):
@@ -32,14 +31,12 @@ class Node:
                 else:
                     pass 
                 successor = self.validate_index(i[0],i[1],j[0],j[1])
-                successor = Node(successor,self.level+1,0,movement,self)
-                #print(successor.tiles)
-                successors.append(successor)
+                #successor = Node(successor,self.level+1,0,movement,self)
+                #successors.append(successor)
                 # if successor is not None:
-                #     successor = Node(successor,self.level+1,0,movement,self)
-                #     print(successor.tiles)
-                #     successors.append(successor)
-        #print(successors)
+                successor = Node(successor,self.level+1,0,movement,self)
+                    #print(successor.tiles)
+                successors.append(successor)
         return successors 
 
 
@@ -66,7 +63,7 @@ class Node:
         #print(successor_tiles)
         return successor_tiles
         #else:
-            #return None
+        #    return None
 
     
     def copy(self,root):
@@ -80,19 +77,38 @@ class Node:
         return temp
 
 class Puzzle:
-    def __init__(self):
-        self.size = 4
+    def __init__(self,size,start,goal):
+        self.size = size
         self.open = []
         self.closed = []
-        self.start = [['1','4','-','7'],['9','2','3','5'],['6','-','10','13'],['8','11','14','12']]
-        #self.start = [['1','2','3'],['4','5','-'],['6','-','7']]
-        #self.goal = [['1','2','3'],['4','5','6'],['7','-','-']]
-        self.goal = [['1','4','7','5'],['9','2','3','-'],['-','11','10','13'],['6','8','14','12']]
+        self.start = start
+        self.goal = goal
 
     def f(self,start,goal):
-        #print(start.tiles)
-        return self.h(start.tiles,goal) + start.level
+        return self.h_manhattan(start.tiles,goal) + start.level
 
+    def h_manhattan(self,start,goal):
+        tmd = 0
+        coor_dict = {}
+        for i in range(self.size):
+            for j in range(self.size):
+                if start[i][j] in coor_dict.keys():
+                    coor_dict[start[i][j]].append([i,j])
+                elif start[i][j] != '-':
+                    coor_dict[start[i][j]] = []
+                    coor_dict[start[i][j]].append([i,j])
+
+                if goal[i][j] in coor_dict.keys():
+                    coor_dict[goal[i][j]].append([i,j])
+                elif goal[i][j] != '-':
+                    coor_dict[goal[i][j]] = []
+                    coor_dict[goal[i][j]].append([i,j])
+
+        for key ,value in coor_dict.items():
+            tmd += abs(value[0][0]-value[1][0]) + abs(value[0][1]-value[1][1])
+        return tmd
+     
+    
     def h(self,start,goal):
         misplacements = 0
         for i in range(self.size):
@@ -107,17 +123,18 @@ class Puzzle:
         start.f_val = self.f(start,goal)
 
         self.open.append(start)
-        count = 0
         while len(self.open) > 0:
             current = self.open[0]
-            print("New It",current.tiles)
-            print("H",self.h(current.tiles,goal))
+            #print("Selected",current.tiles,current.f_val)
             if self.h(current.tiles,goal) == 0:
                 path = []
                 while current.predecessor != None:
                     path.append(current.movement)
                     current = current.predecessor
                 print(path[::-1])
+                f = open("sample.txt", "w")
+                f.write(str(path[::-1]))
+                f.close()
                 break
 
             for successor in current.generate_successors():
@@ -134,51 +151,84 @@ class Puzzle:
 
                 if successor not in self.open:
                     successor.f_val = self.f(successor,goal)
-                    print("")
-                    print("  | ")
-                    print("  | ")
-                    print(" \\\'/ \n")
-                    for i in successor.tiles:
-                        for j in i:
-                            print(j,end=" ")
-                        print("")
-                    #print("Tiles",successor.tiles)
-                    print("f_val",successor.f_val)
-                    print("level",successor.predecessor)
+                    print(successor.tiles, successor.f_val)
                     self.open.append(successor)
-                    print(len(self.open))
+
             self.closed.append(current)
             del self.open[0]
-            print(len(self.closed))
             self.open.sort(key = lambda x:x.f_val,reverse=False)
-            #for i in self.open:
-                #print(i.f_val)
-            #print(self.open)
-            #print(self.closed)
-            #count+= 1
-            print("===========================================================================")
-            # if(count == 5):
-            #     break
             
+            
+            
+            
+        
+            
+def read_file(file_name):
+    tiles = []
+    with open(file_name) as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+    lines = list(filter(None,content))
+    for line in lines:
+        line = line.split('\t')
+        tiles.append(line)
+
+    return tiles
 
 
 
+# start = [['1','2','3','4'],['5','6','-','7'],['8','-','9','10'],['11','12','13','14']]
+# goal = [['1','4','7','5'],['9','2','3','-'],['-','11','10','13'],['6','8','14','12']]
+
+#puzzle = Puzzle(len(start),start,goal)
+#puzzle.solve_puzzle()
 
 
+if __name__ == "__main__":
+    print("""\
     
-
-
-
-
-#sample = [['1','2','3','4'],['5','6','-','7'],['8','-','9','10'],['11','12','13','14']]
-# sample = [['1','2','3'],['4','5','-'],['6','7','8']]
-# level = 0
-# f_val = 0
-
-# node = Node(sample,level,f_val)
-# node.generate_successors()
+███╗   ██╗              ██████╗ ██╗   ██╗███████╗███████╗██╗     ███████╗              ███████╗ ██████╗ ██╗    ██╗   ██╗███████╗██████╗ 
+████╗  ██║              ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝██║     ██╔════╝              ██╔════╝██╔═══██╗██║    ██║   ██║██╔════╝██╔══██╗
+██╔██╗ ██║    █████╗    ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     █████╗      █████╗    ███████╗██║   ██║██║    ██║   ██║█████╗  ██████╔╝
+██║╚██╗██║    ╚════╝    ██╔═══╝ ██║   ██║ ███╔╝   ███╔╝  ██║     ██╔══╝      ╚════╝    ╚════██║██║   ██║██║    ╚██╗ ██╔╝██╔══╝  ██╔══██╗
+██║ ╚████║              ██║     ╚██████╔╝███████╗███████╗███████╗███████╗              ███████║╚██████╔╝███████╗╚████╔╝ ███████╗██║  ██║
+╚═╝  ╚═══╝              ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝╚══════╝              ╚══════╝ ╚═════╝ ╚══════╝ ╚═══╝  ╚══════╝╚═╝  ╚═╝
+                                                                                                                                                                                                                                                                          
+    """)
     
-puzzle = Puzzle()
-puzzle.solve_puzzle()
+    #start = read_file('Sample_Start_Configuration.txt')
+    #goal = read_file('Sample_Goal_Configuration.txt')
+    choice = 0
+    while choice != 2:
+        print("------------------------------------------------------------------------------------------------------------------------------")
+        print("Main menu:")
+        print("1 - Solve a puzzle")
+        print("2 - Exit")
+        choice = int(input("Please enter your choice:"))
+        if (choice == 1):
+            print("""\
+                Example start/goal configuration. 
+
+                1	4	-	7
+                9	2	3	5
+                6	-	10	13
+                8	11	14	12
+
+                The puzzle should be created in tab delimitted format.
+                Empty location is represented with -
+                Provide a file name of the start/goal configuration below
+            """)
+            start_file = input("Start configuration filename:")
+            goal_file = input("Goal configuration filename:")
+            start = read_file(start_file)
+            goal = read_file(goal_file)
+            puzzle = Puzzle(len(start),start,goal)
+            puzzle.solve_puzzle()
+
+
+
+        
+        
+            
 
 
