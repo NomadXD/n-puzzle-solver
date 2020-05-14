@@ -11,6 +11,10 @@ class Node:
         self.predecessor = predecessor 
 
     def generate_successors(self):
+        """ Generate successor nodes for each of 
+            the neighbouring nodes. Returns an 
+            array of Nodes
+        """
         successors = []
         empty_indexes = self.get_empty_tile_indexes()
         for i in empty_indexes:
@@ -37,6 +41,9 @@ class Node:
 
 
     def get_empty_tile_indexes(self):
+        """ Helper function to get the
+            indexes of empty tiles
+        """
         indexes = []
         for i in range(len(self.tiles)):
             for j in range(len(self.tiles)):
@@ -46,6 +53,9 @@ class Node:
 
 
     def validate_index(self,y_old,x_old,y_shifted,x_shifted):
+        """ Helper function to validate
+            the indexes
+        """
         successor_tiles = []
         successor_tiles = self.copy(self.tiles)
         temp_val = successor_tiles[y_shifted][x_shifted]
@@ -74,9 +84,19 @@ class Puzzle:
         self.goal = goal
 
     def f(self,start,goal):
+        """Function that calculates
+            f. f = g + h. h used here is 
+            manhattan distance. If you want to 
+            use misplaced tiles replace,
+            self.h_manhattan with self.h
+        """
         return self.h_manhattan(start.tiles,goal) + start.level
 
     def h_manhattan(self,start,goal):
+        """Function to calculate
+            total manhattan distance between
+            two states
+        """
         tmd = 0
         coor_dict = {}
         for i in range(self.size):
@@ -99,6 +119,9 @@ class Puzzle:
      
     
     def h(self,start,goal):
+        """ Function to calculate misplaced 
+            tiles heuristic
+        """
         misplacements = 0
         for i in range(self.size):
             for j in range(self.size):
@@ -107,6 +130,9 @@ class Puzzle:
         return misplacements
 
     def solve_puzzle(self):
+        """ Function to solve
+            the puzzle
+        """
         print("Solving........")
         start = Node(self.start,0,0,None,None)
         goal = self.goal
@@ -152,6 +178,9 @@ class Puzzle:
         
             
 def read_file(file_name):
+    """Helper function to 
+        read data from a file
+    """
     tiles = []
     with open(file_name) as f:
         content = f.readlines()
